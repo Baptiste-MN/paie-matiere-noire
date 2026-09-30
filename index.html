@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Bulletins de stage · Matière Noire</title>
+<style>
+:root{
+  --paper:#F7F7F5; --ink:#14161A; --ink2:#5C6169; --ink3:#8C9199;
+  --rule:#DDDEDA; --rule2:#EDEEEA; --card:#FFFFFF;
+  --live:#2F6F4F; --live-s:#E6F0EA; --warn:#B4711E; --warn-s:#FBF1E3; --stop:#A63A2B; --stop-s:#F7E6E3;
+  --sans:"Helvetica Neue",Inter,system-ui,sans-serif;
+  --num:"Helvetica Neue",Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+header{max-width:1320px;margin:0 auto;padding:30px 24px 18px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+header h1{margin:0;font-size:20px;font-weight:500;letter-spacing:-.01em}
+header h1 a{color:var(--ink3);text-decoration:none;font-weight:400}
+header h1 a:hover{color:var(--ink)}
+.who{font-size:12px;color:var(--ink3);display:flex;gap:10px;align-items:center}
+main{max-width:1320px;margin:0 auto;padding:22px 24px 80px}
+.btn{border:1px solid var(--rule);background:var(--card);border-radius:3px;padding:7px 13px;cursor:pointer;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--ink3)}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.btn.p{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.p:hover{opacity:.88}
+.btn.ghost{background:none;border-color:transparent;color:var(--ink2);padding:4px 6px}
+.btn.ghost:hover{color:var(--stop)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.gate{max-width:520px;margin:60px auto;background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:28px}
+.gate p{color:var(--ink2);margin:0 0 18px}
+.banner{border-radius:3px;padding:11px 14px;margin-bottom:16px;font-size:13px}
+.banner.stop{background:var(--stop-s);color:var(--stop);border:1px solid #E7C3BC}
+.banner.warn{background:var(--warn-s);color:var(--warn);border:1px solid #EFD8B6}
+.banner.ok{background:var(--live-s);color:var(--live);border:1px solid #C4DCCD}
+.bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.bar label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
+.bar select{min-width:220px}
+select,input[type=text],input[type=number],input[type=date]{border:1px solid var(--rule);background:var(--card);border-radius:3px;padding:7px 9px;font-size:13px;width:100%}
+input[type=number]{font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 22px}
+.chip{border:1px solid var(--rule);background:var(--card);border-radius:20px;padding:3px 11px 3px 9px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip.on{border-color:var(--ink)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--rule)}
+.dot.brouillon{background:var(--warn)} .dot.emis{background:var(--live)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:26px;align-items:start}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:14px}
+.panel>h2{font-size:14px;font-weight:600;margin:0;padding:13px 16px;border-bottom:1px solid var(--rule2);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.panel>h2 small{font-weight:400;color:var(--ink3);font-size:12px}
+.panel .in{padding:14px 16px}
+details.panel>summary{list-style:none;cursor:pointer;font-size:14px;font-weight:600;padding:13px 16px;display:flex;justify-content:space-between;gap:10px}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary small{font-weight:400;color:var(--ink3);font-size:12px}
+details.panel[open]>summary{border-bottom:1px solid var(--rule2)}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.f .full{grid-column:1/-1}
+.f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2)}
+.f .hint{font-size:11px;color:var(--ink3)}
+.src{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+@media(max-width:560px){.src{grid-template-columns:1fr}.f{grid-template-columns:1fr}}
+.src label{border:1px solid var(--rule);border-radius:3px;padding:10px 11px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.src label:has(input:checked){border-color:var(--ink);background:var(--paper)}
+.src input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.src .k{font-size:12px;color:var(--ink2)}
+.src .v{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.src .s{font-size:11px;color:var(--ink3)}
+.src input[type=number]{margin-top:2px;font-size:18px;padding:3px 6px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--rule2);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+.muted{color:var(--ink3)}
+.lines .row{display:grid;grid-template-columns:1fr 110px 150px 30px;gap:6px;margin-bottom:6px}
+@media(max-width:560px){.lines .row{grid-template-columns:1fr 1fr}}
+.checks{margin:0;padding:0;list-style:none}
+.checks li{font-size:13px;padding:7px 0 7px 18px;position:relative;border-bottom:1px solid var(--rule2)}
+.checks li:last-child{border-bottom:0}
+.checks li::before{content:'';position:absolute;left:0;top:13px;width:8px;height:8px;border-radius:50%}
+.checks li.stop::before{background:var(--stop)} .checks li.warn::before{background:var(--warn)}
+.checks li.info::before{background:var(--ink3)} .checks li.ok::before{background:var(--live)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:14px 0 0}
+.state{font-size:12px;color:var(--ink2);margin-right:auto;align-self:center}
+/* feuille */
+.sheet-wrap{position:sticky;top:16px}
+.sheet{background:#fff;border:1px solid var(--rule);box-shadow:0 1px 0 var(--rule2),0 18px 40px -28px rgba(20,22,26,.35);
+  aspect-ratio:210/297;padding:6.2% 7.5%;font-size:clamp(8px,.78vw,10.5px);line-height:1.45;position:relative;overflow:hidden}
+.sheet .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+  font-size:5.4em;font-weight:700;color:rgba(166,58,43,.08);transform:rotate(-28deg);letter-spacing:.08em}
+.sh-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid var(--ink);padding-bottom:1.1em;margin-bottom:1.4em}
+.sh-mark{font-weight:700;letter-spacing:.32em;font-size:1.25em}
+.sh-title{text-align:right}
+.sh-title b{display:block;font-size:1.25em;font-weight:600}
+.sh-title span{color:var(--ink2)}
+.sh-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.6em;margin-bottom:1.6em}
+.sh-cols h4,.sh-sec h4{margin:0 0 .4em;font-size:.92em;color:var(--ink3);font-weight:500}
+.sh-cols p{margin:0}
+.sh-t{width:100%;border-collapse:collapse;margin-bottom:1.4em}
+.sh-t th{font-weight:500;color:var(--ink3);text-align:left;border-bottom:1px solid var(--ink);padding:.35em 0;font-size:.92em}
+.sh-t td{padding:.45em 0;border-bottom:1px solid var(--rule2);vertical-align:top}
+.sh-t .r{text-align:right;font-variant-numeric:tabular-nums}
+.sh-t tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);font-weight:700;font-size:1.12em;padding-top:.6em}
+.sh-sec{display:grid;grid-template-columns:1fr 1fr;gap:1.6em;margin-bottom:1.2em}
+.sh-sec .kv{padding:.3em 0;font-size:1em}
+.sh-legal{position:absolute;left:7.5%;right:7.5%;bottom:5.2%;color:var(--ink3);font-size:.82em;border-top:1px solid var(--rule);padding-top:.8em}
+.sh-legal p{margin:0 0 .35em}
+/* historique */
+table.h{width:100%;border-collapse:collapse;font-size:13px}
+table.h th{text-align:left;font-weight:500;color:var(--ink3);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--rule)}
+table.h td{padding:7px 8px;border-bottom:1px solid var(--rule2);font-variant-numeric:tabular-nums}
+table.h td.r,table.h th.r{text-align:right}
+table.h tr.cur td{background:var(--paper)}
+.tag{font-size:11px;border-radius:2px;padding:1px 6px;border:1px solid var(--rule);color:var(--ink3)}
+.tag.emis{border-color:#C4DCCD;color:var(--live);background:var(--live-s)}
+.tag.brouillon{border-color:#EFD8B6;color:var(--warn);background:var(--warn-s)}
+.empty{padding:40px 20px;text-align:center;color:var(--ink2)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:3px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1><a href="https://baptiste-mn.github.io/mn/">Matière Noire</a> / Bulletins de stage</h1>
+  <div class="who"><span id="who"></span><button class="btn hidden" id="out">Se déconnecter</button></div>
+</header>
+
+<main>
+  <div id="gate" class="gate">
+    <p id="gateMsg">Outil réservé à la direction (Baptiste, Félix, Pierre et Sam) : les gratifications et données personnelles des stagiaires y sont stockées.</p>
+    <button class="btn p" id="in">Se connecter avec Google</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <div id="secu"></div>
+    <div class="bar">
+      <label>Stagiaire<select id="selP"></select></label>
+      <label>Mois<select id="selM"></select></label>
+      <label style="flex-direction:row;align-items:center;gap:6px;padding-bottom:8px"><input type="checkbox" id="showArch"> inclure les stages terminés</label>
+    </div>
+    <div class="chips" id="chips"></div>
+
+    <div id="noIntern" class="empty hidden">Aucune personne avec une période de contrat « Stage » dans le référentiel.<br>Ajoute la période dans l’administration, elle apparaîtra ici.</div>
+
+    <div class="grid" id="work">
+      <div>
+        <details class="panel" id="pFiche">
+          <summary>Fiche stagiaire <small id="ficheState"></small></summary>
+          <div class="in">
+            <div class="f">
+              <label>Prénom<input type="text" data-p="prenom"></label>
+              <label>Nom<input type="text" data-p="nom"></label>
+              <label class="full">Adresse<input type="text" data-p="adresse"></label>
+              <label>Code postal et ville<input type="text" data-p="cpVille"></label>
+              <label>N° de sécurité sociale<input type="text" data-p="numSS" placeholder="ou « en cours d’attribution »"></label>
+              <label class="full">Établissement d’enseignement<input type="text" data-p="ecole"></label>
+              <label>Début de convention<input type="date" data-p="conventionDebut"><span class="hint" id="refDeb"></span></label>
+              <label>Fin de convention<input type="date" data-p="conventionFin"><span class="hint" id="refFin"></span></label>
+              <label>Taux horaire (€)<input type="number" step="0.01" min="0" data-p="taux"><span class="hint" id="tauxHint"></span></label>
+              <label>Heures par jour<input type="number" step="0.25" min="0" data-p="heuresJour"></label>
+              <label>Prix du pass Navigo mensuel (€)<input type="number" step="0.01" min="0" data-p="navigoPrix"><span class="hint">Remboursé à 50 %.</span></label>
+              <label>Valeur d’un titre-restaurant (€)<input type="number" step="0.01" min="0" data-p="trValeur"><span class="hint">0 = pas de titres-restaurant.</span></label>
+              <label>Langue du bulletin<select data-p="langue"><option value="fr">Français</option><option value="en">English</option></select></label>
+              <span></span>
+              <label>Gratification déjà versée avant l’outil (€)<input type="number" step="0.01" min="0" data-p="cumulReprise"><span class="hint">Pour un stage commencé avant octobre 2026.</span></label>
+              <label>Heures déjà effectuées avant l’outil<input type="number" step="0.5" min="0" data-p="heuresReprise"></label>
+            </div>
+            <div class="actions"><span class="state" id="ficheMaj"></span><button class="btn p" id="saveFiche">Enregistrer la fiche</button></div>
+          </div>
+        </details>
+
+        <section class="panel">
+          <h2>Présence du mois <small id="convInfo"></small></h2>
+          <div class="in">
+            <div class="src" id="src">
+              <label><input type="radio" name="src" value="temps"><span class="k">Suivi de temps</span><span class="v" id="vTemps">—</span><span class="s" id="sTemps"></span></label>
+              <label><input type="radio" name="src" value="calendrier"><span class="k">Calendrier − absences</span><span class="v" id="vCal">—</span><span class="s" id="sCal"></span></label>
+              <label><input type="radio" name="src" value="manuel"><span class="k">Saisie manuelle</span><input type="number" step="0.5" min="0" id="manJ" aria-label="Jours saisis manuellement"><span class="s">jours, demi-journées possibles</span></label>
+            </div>
+            <div class="kv"><span>Absences validées dans Congés</span><span id="absTxt">—</span></div>
+            <div class="kv"><span>Heures de présence retenues</span><span id="hTxt">—</span></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Remboursements et autres lignes</h2>
+          <div class="in">
+            <div class="f" style="margin-bottom:12px">
+              <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="navOn"> Pass Navigo remboursé ce mois</label>
+              <label>Montant remboursé (€)<input type="number" step="0.01" min="0" id="navM"></label>
+            </div>
+            <div class="lines" id="lines"></div>
+            <button class="btn" id="addLine">Ajouter une ligne</button>
+            <p class="muted" style="font-size:12px;margin:8px 0 0">Une régularisation de gratification entre dans le cumul et le seuil d’exonération ; un remboursement de frais non.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Titres-restaurant et paiement</h2>
+          <div class="in f">
+            <label>Titres à remettre <span id="trMois"></span><input type="number" step="1" min="0" id="trN"><span class="hint" id="trHint"></span></label>
+            <label>Date de paiement<input type="date" id="payD"></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Contrôles</h2>
+          <div class="in"><ul class="checks" id="checks"></ul></div>
+        </section>
+      </div>
+
+      <div class="sheet-wrap">
+        <div id="emisBanner"></div>
+        <div class="sheet" id="sheet"></div>
+        <div class="actions">
+          <span class="state" id="bState"></span>
+          <span id="actDraft">
+            <button class="btn ghost" id="delDraft">Supprimer le brouillon</button>
+            <button class="btn" id="saveDraft">Enregistrer le brouillon</button>
+            <button class="btn" id="previewPdf">Aperçu PDF</button>
+            <button class="btn p" id="emit">Émettre et télécharger</button>
+          </span>
+          <span id="actEmis" class="hidden">
+            <button class="btn" id="reopen">Rouvrir pour correction</button>
+            <button class="btn p" id="dlPdf">Télécharger le PDF</button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <section class="panel" id="histo" style="margin-top:26px">
+      <h2>Historique du stage <small id="histoInfo"></small></h2>
+      <div class="in" style="overflow-x:auto"><table class="h" id="histoT"></table></div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- ═════════ Cœur de calcul : fonctions pures, sans Firebase ni DOM ═════════ -->
+<script>
+(function(){
+/* ═══ Paramètres société — à ajuster si l'adresse ou les identifiants changent ═══ */
+const SOCIETE={raison:'SAS MATIERE NOIRE PARIS',adresse:'20 rue Saint Sauveur',cpVille:'75002 Paris',
+  siret:'91175662500024',naf:'9001Z',urssaf:'117000001575247281'};
+/* Minimum légal = 15 % du plafond horaire de la Sécurité sociale. Ajouter chaque année (PHSS 2026 = 30 €). */
+const MINIMA={2025:4.35,2026:4.50};
+/* Mois à partir duquel l'outil est la source des bulletins (pas de reprise antérieure). */
+const DEBUT_OUTIL='2026-10';
+
+const MOIS={fr:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
+  en:['January','February','March','April','May','June','July','August','September','October','November','December']};
+const ABS_EN={'Congés payés':'Paid leave','Récupération':'Time off in lieu','Sans solde':'Unpaid leave','Arrêt maladie':'Sick leave','Autre':'Other'};
+const T={
+ fr:{sep:' : ',title:'Bulletin de gratification de stage',period:'Période',version:v=>`Version ${v} — annule et remplace la version ${v-1}`,
+  host:'Organisme d’accueil',intern:'Stagiaire',ss:'N° de sécurité sociale',school:'Établissement',conv:'Convention',du:'du',au:'au',
+  siret:'SIRET',naf:'Code NAF',urssaf:'N° URSSAF',label:'Libellé',base:'Base',rate:'Taux',amount:'Montant',
+  stipend:'Gratification de stage',regul:'Régularisation',navigo:'Remboursement pass Navigo (50 %)',net:'Net à payer',
+  paid:d=>`Payé par virement le ${d}`,presence:'Présence du mois',days:'Jours de présence',hours:'Heures de présence',
+  absences:'Absences',none:'aucune',cumul:'Cumuls depuis le début du stage',cHours:'Heures effectuées',cStip:'Gratification versée',
+  tr:'Titres-restaurant (hors net à payer)',trLine:(n,v,m)=>`${n} titre${n>1?'s':''} × ${v} — à remettre en ${m}`,trNone:'aucun',
+  d:'j',h:'h',issued:(d,w)=>`Émis le ${d} par ${w}`,draft:'BROUILLON',notIssued:'Document non émis — ne pas transmettre',
+  legal1:'Gratification versée en application de l’article L.124-6 du Code de l’éducation. Elle est exonérée de cotisations et contributions sociales dans la limite de 15 % du plafond horaire de la Sécurité sociale par heure de stage.',
+  legalOver:'Le taux horaire dépasse le seuil d’exonération : la fraction excédentaire est soumise à cotisations et n’est pas traitée par ce document.',
+  legal2:'Prise en charge de 50 % de l’abonnement de transport public en application de l’article R.3261-1 du Code du travail.',
+  legal3:'Ce document n’est pas un bulletin de paie : le stagiaire n’est pas lié à l’organisme d’accueil par un contrat de travail.'},
+ en:{sep:': ',title:'Internship stipend statement',period:'Period',version:v=>`Version ${v} — cancels and replaces version ${v-1}`,
+  host:'Host organisation',intern:'Intern',ss:'Social security number',school:'School',conv:'Agreement',du:'from',au:'to',
+  siret:'SIRET',naf:'NAF code',urssaf:'URSSAF no.',label:'Description',base:'Base',rate:'Rate',amount:'Amount',
+  stipend:'Internship stipend',regul:'Adjustment',navigo:'Navigo pass reimbursement (50%)',net:'Net payable',
+  paid:d=>`Paid by bank transfer on ${d}`,presence:'Attendance this month',days:'Days of attendance',hours:'Hours of attendance',
+  absences:'Absences',none:'none',cumul:'Totals since the start of the internship',cHours:'Hours completed',cStip:'Stipend paid',
+  tr:'Meal vouchers (not included in net payable)',trLine:(n,v,m)=>`${n} voucher${n>1?'s':''} × ${v} — to be issued in ${m}`,trNone:'none',
+  d:'d',h:'h',issued:(d,w)=>`Issued on ${d} by ${w}`,draft:'DRAFT',notIssued:'Not issued — do not send',
+  legal1:'Stipend paid pursuant to Article L.124-6 of the French Education Code. It is exempt from social security contributions up to 15% of the hourly Social Security ceiling per hour of internship.',
+  legalOver:'The hourly rate exceeds the exemption threshold: the excess portion is subject to contributions and is not covered by this document.',
+  legal2:'50% of the public transport pass reimbursed pursuant to Article R.3261-1 of the French Labour Code.',
+  legal3:'This document is not a payslip: the intern is not bound to the host organisation by an employment contract.'}
+};
+
+const p2=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+const pl=iso=>{const[y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d);};
+const r2=n=>Math.round((+n||0)*100+Number.EPSILON*100)/100;
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),
+ g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,
+ m=Math.floor((a+11*h+22*l)/451);return new Date(y,Math.floor((h+l-7*m+114)/31)-1,((h+l-7*m+114)%31)+1);}
+const _hc={};
+function feries(y){if(_hc[y])return _hc[y];
+ const s=new Set([`${y}-01-01`,`${y}-05-01`,`${y}-05-08`,`${y}-07-14`,`${y}-08-15`,`${y}-11-01`,`${y}-11-11`,`${y}-12-25`]);
+ const E=easter(y);[1,39,50].forEach(o=>{const d=new Date(E);d.setDate(d.getDate()+o);s.add(ymd(d));});return _hc[y]=s;}
+const ouvre=iso=>{const d=pl(iso),w=d.getDay();return w!==0&&w!==6&&!feries(d.getFullYear()).has(iso);};
+function ouvres(a,b){if(!a||!b||a>b)return 0;let n=0;const d=pl(a),last=pl(b);
+ while(d<=last){if(ouvre(ymd(d)))n++;d.setDate(d.getDate()+1);}return n;}
+const monthStart=m=>m+'-01';
+const monthEnd=m=>{const[y,mm]=m.split('-').map(Number);return `${m}-${p2(new Date(y,mm,0).getDate())}`;};
+const addMonth=(m,k=1)=>{const[y,mm]=m.split('-').map(Number);const d=new Date(y,mm-1+k,1);return `${d.getFullYear()}-${p2(d.getMonth()+1)}`;};
+const moisLabel=(m,lang='fr')=>{const[y,mm]=m.split('-').map(Number);return `${MOIS[lang][mm-1]} ${y}`;};
+const dateFr=iso=>iso?iso.split('-').reverse().join('/'):'';
+/* intersection [mois] ∩ [convention] → [a,b] ou null */
+function clip(m,deb,fin){const a=[monthStart(m),deb||'0000-01-01'].sort()[1], b=[monthEnd(m),fin||'9999-12-31'].sort()[0];return a<=b?[a,b]:null;}
+function lastOuvre(m){const d=pl(monthEnd(m));while(!ouvre(ymd(d)))d.setDate(d.getDate()-1);return ymd(d);}
+/* 1 234,50 € — séparateur simple pour rester lisible dans les polices PDF standard */
+function eur(n,sp=' '){const v=r2(n),a=Math.abs(v).toFixed(2).split('.');
+ return (v<0?'-':'')+a[0].replace(/\B(?=(\d{3})+(?!\d))/g,sp)+','+a[1]+sp+'€';}
+const num=(n,dec=2)=>{const v=r2(n);return Number.isInteger(v)?String(v):v.toFixed(dec).replace(/0+$/,'').replace('.',',');};
+
+/* Jours présents d'après le suivi de temps : jour compté si des heures projet (hors récupération) sont saisies. */
+function joursTemps(tm,m,deb,fin){
+ const c=clip(m,deb,fin);if(!tm||!c)return{jours:0,heures:0,saisi:false};
+ const par={};let saisi=false;
+ Object.entries(tm).forEach(([proj,jrs])=>{if(proj==='_recup'||!jrs)return;
+  Object.entries(jrs).forEach(([d,h])=>{const v=+h;if(!v)return;saisi=true;
+   const iso=`${m}-${p2(+d)}`;if(iso<c[0]||iso>c[1])return;par[iso]=(par[iso]||0)+v;});});
+ const js=Object.values(par).filter(v=>v>0);
+ return{jours:js.length,heures:r2(js.reduce((s,v)=>s+v,0)),saisi};
+}
+/* Absences validées (module Congés) sur le mois, en jours ouvrés, par type. */
+function absences(conges,nom,m,deb,fin){
+ const c=clip(m,deb,fin),par={};let total=0;if(!c)return{par,total};
+ Object.values(conges||{}).forEach(r=>{
+  if(!r||r.status!=='approved'||(r.name||'').trim().toLowerCase()!==(nom||'').trim().toLowerCase())return;
+  const a=[r.startDate,c[0]].sort()[1], b=[r.endDate,c[1]].sort()[0];const n=ouvres(a,b);
+  if(n>0){par[r.type||'Autre']=(par[r.type||'Autre']||0)+n;total+=n;}});
+ return{par,total};
+}
+function joursCalendrier(m,deb,fin,absTotal){const c=clip(m,deb,fin);return c?Math.max(0,ouvres(c[0],c[1])-absTotal):0;}
+
+/* Totaux d'un bulletin */
+function totaux(b){
+ const heures=r2((+b.jours||0)*(+b.heuresJour||0));
+ const gratifBase=r2(heures*(+b.taux||0));
+ const L=(b.lignes||[]).filter(l=>l&&(l.libelle||+l.montant));
+ const regul=r2(L.filter(l=>l.type==='gratif').reduce((s,l)=>s+(+l.montant||0),0));
+ const frais=r2(L.filter(l=>l.type!=='gratif').reduce((s,l)=>s+(+l.montant||0),0));
+ const navigo=b.navigo&&b.navigo.actif?r2(b.navigo.montant):0;
+ const gratification=r2(gratifBase+regul);
+ return{heures,gratifBase,regul,frais,navigo,gratification,net:r2(gratification+frais+navigo),lignes:L};
+}
+
+function nomFichier(s,m){
+ const clean=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9-]+/g,'_').replace(/^_|_$/g,'');
+ const[y,mm]=m.split('-');return `${clean(s.nom).toUpperCase()}_${clean(s.prenom)}_${mm}_${y}.pdf`;
+}
+
+/* ═══ PDF — mise en page vectorielle A4 ═══ */
+function pdf(M,jsPDF){
+ const t=T[M.lang]||T.fr, L=M.lang, doc=new jsPDF({unit:'mm',format:'a4'});
+ const X=18,W=174,R=X+W;let y=20;
+ const ink=[20,22,26],g2=[92,97,105],g3=[140,145,153],rule=[221,222,218];
+ const txt=(s,x,yy,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9);doc.setTextColor(...(o.c||ink));
+  const opt={align:o.a||'left'};if(o.cs)opt.charSpace=o.cs;if(o.ang)opt.angle=o.ang;
+  doc.text(Array.isArray(s)?s:String(s??''),x,yy,opt);};
+ /* texte sur plusieurs lignes : renvoie la hauteur consommée */
+ const wrap=(s,x,yy,w,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9);
+  const ls=doc.splitTextToSize(String(s??''),w);txt(ls,x,yy,o);return ls.length;};
+ const hr=(yy,w=.2,c=rule)=>{doc.setDrawColor(...c);doc.setLineWidth(w);doc.line(X,yy,R,yy);};
+ if(!M.emis){doc.saveGraphicsState&&doc.saveGraphicsState();doc.setGState&&doc.setGState(new doc.GState({opacity:.09}));
+  txt(t.draft,62,200,{s:70,b:true,c:[166,58,43],ang:30});doc.restoreGraphicsState&&doc.restoreGraphicsState();}
+ txt('MATIÈRE NOIRE',X,y+2,{s:12,b:true,cs:1.1});
+ txt(t.title,R,y,{s:12,b:true,a:'right'});
+ txt(`${t.period}${t.sep}${moisLabel(M.mois,L)}`,R,y+5.5,{s:9,c:g2,a:'right'});
+ if(M.version>1)txt(t.version(M.version),R,y+10,{s:8,c:g2,a:'right'});
+ y+=14;hr(y,.5,ink);y+=8;
+ const S=M.societe,P=M.stagiaire,c2=X+W/2+4;
+ txt(t.host,X,y,{s:8,c:g3});txt(t.intern,c2,y,{s:8,c:g3});y+=5;
+ const left=[[S.raison,1],[S.adresse],[S.cpVille],[`${t.siret} ${S.siret} · ${t.naf} ${S.naf}`],[`${t.urssaf} ${S.urssaf}`]];
+ const right=[[`${P.prenom||''} ${P.nom||''}`.trim()||'—',1],[P.adresse||'—'],[P.cpVille||'—'],[`${t.ss}${t.sep}${P.numSS||'—'}`],
+  [`${t.school}${t.sep}${P.ecole||'—'}`],[`${t.conv} ${t.du} ${dateFr(P.conventionDebut)||'—'} ${t.au} ${dateFr(P.conventionFin)||'—'}`]];
+ let yL=y,yR=y;
+ left.forEach(([s,b])=>{yL+=wrap(s,X,yL,W/2-6,{b:!!b})*4.2;});
+ right.forEach(([s,b])=>{yR+=wrap(s,c2,yR,W/2-4,{b:!!b})*4.2;});
+ y=Math.max(yL,yR);
+ y+=6;
+ const cB=X+96,cT=X+136;
+ txt(t.label,X,y,{s:8,c:g3});txt(t.base,cB,y,{s:8,c:g3,a:'right'});txt(t.rate,cT,y,{s:8,c:g3,a:'right'});txt(t.amount,R,y,{s:8,c:g3,a:'right'});
+ y+=2;hr(y,.4,ink);y+=5.5;
+ const row=(a,b,c,d)=>{const n=wrap(a,X,y,b?58:100);txt(b,cB,y,{a:'right'});txt(c,cT,y,{a:'right'});txt(d,R,y,{a:'right'});y+=3+(n-1)*3.8;hr(y);y+=4.6;};
+ row(t.stipend,`${num(M.jours)} ${t.d} × ${num(M.heuresJour)} ${t.h} = ${num(M.heures)} ${t.h}`,eur(M.taux),eur(M.gratifBase));
+ M.lignes.filter(l=>l.type==='gratif').forEach(l=>row(l.libelle||t.regul,'','',eur(l.montant)));
+ if(M.navigo)row(t.navigo,'','',eur(M.navigo));
+ M.lignes.filter(l=>l.type!=='gratif').forEach(l=>row(l.libelle||'—','','',eur(l.montant)));
+ y-=4.6;hr(y,.5,ink);y+=6;
+ txt(t.net,X,y,{s:11,b:true});txt(eur(M.net),R,y,{s:11,b:true,a:'right'});y+=5;
+ txt(t.paid(dateFr(M.datePaiement)),X,y,{s:8,c:g2});y+=11;
+ const col=(title,rows,x)=>{let yy=y;txt(title,x,yy,{s:8,c:g3});yy+=5;
+  rows.forEach(([k,v])=>{txt(k,x,yy);const n=wrap(v,x+W/2-6,yy,W/2-40,{a:'right'});yy+=2.6+(n-1)*3.8;doc.setDrawColor(...rule);doc.setLineWidth(.2);doc.line(x,yy,x+W/2-6,yy);yy+=4.2;});return yy;};
+ const absTxt=Object.keys(M.absences||{}).length?Object.entries(M.absences).map(([k,v])=>`${L==='en'?(ABS_EN[k]||k):k} ${num(v)} ${t.d}`).join(', '):t.none;
+ const y1=col(t.presence,[[t.days,`${num(M.jours)} ${t.d}`],[t.hours,`${num(M.heures)} ${t.h}`],[t.absences,absTxt]],X);
+ const y2=col(t.cumul,[[t.cHours,`${num(M.heuresCumulApres)} ${t.h}`],[t.cStip,eur(M.cumulApres)]],c2);
+ y=Math.max(y1,y2)+5;
+ txt(t.tr,X,y,{s:8,c:g3});y+=5;
+ txt(M.tr&&M.tr.nombre>0?t.trLine(M.tr.nombre,eur(M.tr.valeur),moisLabel(addMonth(M.mois),L)):t.trNone,X,y);
+ const legal=[t.legal1,M.depasseSeuil?t.legalOver:null,M.navigo?t.legal2:null,t.legal3].filter(Boolean);
+ doc.setFontSize(7);const nl=legal.reduce((s,x)=>s+doc.splitTextToSize(x,W).length,0);
+ let yl=Math.max(y+14,283-nl*3-legal.length*1.2);hr(yl-5);
+ legal.forEach(s=>{yl+=wrap(s,X,yl,W,{s:7,c:g3})*3+1.2;});
+ txt(M.emis?t.issued(dateFr(M.emisLe),M.emisPar):t.notIssued,X,289,{s:7,c:g3});
+ txt(nomFichier(P,M.mois).replace('.pdf',''),R,289,{s:7,c:g3,a:'right'});
+ return doc;
+}
+
+window.CORE={SOCIETE,MINIMA,DEBUT_OUTIL,T,ABS_EN,p2,ymd,pl,r2,ouvre,ouvres,feries,monthStart,monthEnd,addMonth,moisLabel,dateFr,
+ clip,lastOuvre,eur,num,joursTemps,absences,joursCalendrier,totaux,nomFichier,pdf};
+})();
+</script>
+
+<!-- ═════════ Application ═════════ -->
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {getDatabase,ref,onValue,set,update,remove} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+const C=window.CORE;
+
+const CFG={apiKey:"AIzaSyByf4SmnGJvfkkJVFhfINXikb8I8ge5VRU",
+  authDomain:"matiere-noire-todo.firebaseapp.com",
+  databaseURL:"https://matiere-noire-todo-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"matiere-noire-todo",storageBucket:"matiere-noire-todo.firebasestorage.app",
+  messagingSenderId:"583651643354",appId:"1:583651643354:web:74b78c43316b9d657dfae3"};
+/* ═══ Accès — à garder identique à la règle Firebase de la branche paie/ ═══ */
+const AUTORISES=['baptiste@matiere-noire.paris','felix@matiere-noire.paris','pierre@matiere-noire.paris','sam@matiere-noire.paris'];
+const ROOT='paie/stages';
+
+const app0=initializeApp(CFG), db=getDatabase(app0), auth=getAuth(app0);
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const E=n=>C.eur(n,'\u00a0');
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2600);};
+const ok=u=>!!u&&u.emailVerified&&AUTORISES.includes((u.email||'').toLowerCase());
+
+let user=null, PEOPLE=[], TIME={}, CONGES={}, PARAMS={}, BULL={}, loaded=new Set(), unsubs=[];
+let pid=null, mois=null, draft=null, dirty=false, ficheDirty=false;
+
+/* ── authentification ── */
+$('#in').onclick=async()=>{try{const p=new GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});await signInWithPopup(auth,p);}
+  catch(e){$('#gateMsg').textContent=location.protocol==='file:'?'Connexion impossible depuis un fichier local : ouvre la page en ligne.':'Connexion refusée : '+e.message;}};
+$('#out').onclick=()=>signOut(auth);
+onAuthStateChanged(auth,u=>{
+  user=ok(u)?u:null;
+  $('#who').textContent=u?(user?u.email:u.email+' — non autorisé'):'';
+  $('#out').classList.toggle('hidden',!u);
+  $('#gate').classList.toggle('hidden',!!user);
+  $('#app').classList.toggle('hidden',!user);
+  if(u&&!user)$('#gateMsg').textContent='Ce compte n’a pas accès aux bulletins de stage. Connecte-toi avec un compte de la direction.';
+  unsubs.forEach(f=>f());unsubs=[];loaded.clear();
+  if(user){subscribe();verifSecu();}
+});
+
+/* ── contrôle de sécurité : la branche doit être illisible sans connexion ── */
+async function verifSecu(){
+  try{
+    const r=await fetch(CFG.databaseURL+'/'+ROOT.split('/')[0]+'.json?shallow=true');
+    $('#secu').innerHTML=r.ok
+      ?`<div class="banner stop">La branche <b>paie/</b> est lisible sans connexion : les règles Firebase ne sont pas encore appliquées. N’enregistre aucune donnée avant de les avoir publiées.</div>`:'';
+  }catch(e){$('#secu').innerHTML='';}
+}
+
+/* ── données ── */
+function subscribe(){
+  const on=(path,cb,key)=>unsubs.push(onValue(ref(db,path),s=>{cb(s.val());loaded.add(key);refresh();},
+    e=>{$('#secu').innerHTML+=`<div class="banner stop">Lecture refusée sur « ${esc(path)} » : ${esc(e.message)}</div>`;loaded.add(key);refresh();}));
+  on('referentiel/people',v=>PEOPLE=(Array.isArray(v)?v:Object.values(v||{})).filter(Boolean),'people');
+  on('referentiel/time',v=>TIME=v||{},'time');
+  on('conges',v=>CONGES=v||{},'conges');
+  on(ROOT+'/params',v=>PARAMS=v||{},'params');
+  on(ROOT+'/bulletins',v=>BULL=v||{},'bull');
+}
+const periodeStage=p=>(p.periodes||[]).filter(x=>x&&x.contrat==='Stage').sort((a,b)=>(b.debut||'').localeCompare(a.debut||''))[0]||null;
+function stagiaires(){
+  const today=C.ymd(new Date());
+  return PEOPLE.filter(p=>p.id&&periodeStage(p)).filter(p=>{
+    const s=periodeStage(p);return $('#showArch').checked||(!p.archive&&(!s.fin||s.fin>=C.addMonth(today.slice(0,7),-1)+'-01'));
+  }).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+}
+const person=id=>PEOPLE.find(p=>p.id===id);
+function params(id){
+  const p=person(id)||{}, s=periodeStage(p)||{}, sv=PARAMS[id]||{};
+  const [pre,...rest]=(p.nom||'').split(' ');
+  const annee=+(s.debut||C.ymd(new Date())).slice(0,4);
+  return{prenom:pre||'',nom:rest.join(' '),adresse:'',cpVille:'',numSS:'',ecole:'',
+    conventionDebut:s.debut||'',conventionFin:s.fin||'',taux:C.MINIMA[annee]??C.MINIMA[2026],heuresJour:7,
+    navigoPrix:0,trValeur:10,langue:'fr',cumulReprise:0,heuresReprise:0,...sv};
+}
+const bull=(id,m)=>((BULL[id]||{})[m])||null;
+function moisConvention(P){
+  const cur=C.ymd(new Date()).slice(0,7);
+  let a=(P.conventionDebut||cur).slice(0,7), b=(P.conventionFin||C.addMonth(cur,6)).slice(0,7);
+  if(a<C.DEBUT_OUTIL)a=C.DEBUT_OUTIL; const out=[];
+  for(let m=a;m<=b&&out.length<24;m=C.addMonth(m))out.push(m);
+  return out;
+}
+
+/* ── valeurs calculées pour (stagiaire, mois) ── */
+function auto(id,m,P){
+  const p=person(id)||{};
+  const tm=((TIME[m]||{})[id]);
+  const tps=C.joursTemps(tm,m,P.conventionDebut,P.conventionFin);
+  const ab=C.absences(CONGES,p.nom,m,P.conventionDebut,P.conventionFin);
+  const cal=C.joursCalendrier(m,P.conventionDebut,P.conventionFin,ab.total);
+  const nm=C.addMonth(m), abN=C.absences(CONGES,p.nom,nm,P.conventionDebut,P.conventionFin);
+  const trN=+P.trValeur>0?C.joursCalendrier(nm,P.conventionDebut,P.conventionFin,abN.total):0;
+  return{tps,ab,cal,trN};
+}
+function cumulAvant(id,m,P){
+  let g=+P.cumulReprise||0,h=+P.heuresReprise||0;const manquants=[];
+  moisConvention(P).filter(x=>x<m).forEach(x=>{const b=bull(id,x);
+    if(b&&b.statut==='emis'){g+=+b.gratification||0;h+=+b.heures||0;}else manquants.push(x);});
+  return{g:C.r2(g),h:C.r2(h),manquants};
+}
+function nouveauDraft(id,m){
+  const P=params(id),A=auto(id,m,P);
+  const source=A.tps.saisi?'temps':'calendrier';
+  return{statut:'nouveau',version:1,source,joursManuel:null,heuresJour:+P.heuresJour,taux:+P.taux,
+    lignes:[],navigo:{actif:+P.navigoPrix>0,montant:C.r2(+P.navigoPrix/2)},tr:{nombre:A.trN,valeur:+P.trValeur},
+    datePaiement:C.lastOuvre(m)};
+}
+function joursRetenus(d,A){return d.source==='temps'?A.tps.jours:d.source==='calendrier'?A.cal:(+d.joursManuel||0);}
+
+/* modèle complet (aperçu, PDF, enregistrement) */
+function modele(id,m,d){
+  const emis=d.statut==='emis';
+  const P=emis&&d.snapshot?d.snapshot:params(id), A=auto(id,m,params(id));
+  const jours=emis?+d.jours:joursRetenus(d,A);
+  const base={jours,heuresJour:+d.heuresJour,taux:+d.taux,lignes:d.lignes||[],navigo:d.navigo};
+  const tt=C.totaux(base);
+  const cu=emis?{g:+d.cumulAvant,h:+d.heuresCumulAvant,manquants:[]}:cumulAvant(id,m,params(id));
+  const seuil=C.MINIMA[+m.slice(0,4)];
+  return{lang:P.langue||'fr',mois:m,version:d.version||1,emis,statut:d.statut,societe:C.SOCIETE,
+    stagiaire:{prenom:P.prenom,nom:P.nom,adresse:P.adresse,cpVille:P.cpVille,numSS:P.numSS,ecole:P.ecole,
+      conventionDebut:P.conventionDebut,conventionFin:P.conventionFin,langue:P.langue},
+    jours,heuresJour:+d.heuresJour,taux:+d.taux,...tt,
+    absences:emis?(d.absences||{}):A.ab.par,
+    cumulAvant:cu.g,cumulApres:C.r2(cu.g+tt.gratification),heuresCumulAvant:cu.h,heuresCumulApres:C.r2(cu.h+tt.heures),
+    manquants:cu.manquants,tr:d.tr,datePaiement:d.datePaiement,emisLe:d.emisLe,emisPar:d.emisPar,
+    depasseSeuil:seuil!=null&&+d.taux>seuil+1e-9,A};
+}
+
+/* ── contrôles ── */
+function controles(M,P,d){
+  const out=[], y=+M.mois.slice(0,4), min=C.MINIMA[y];
+  const hConv=C.ouvres(P.conventionDebut,P.conventionFin)*(+P.heuresJour||7);
+  const obligatoire=hConv>44*7;
+  if(!P.conventionDebut||!P.conventionFin)out.push(['stop','Dates de convention manquantes dans la fiche stagiaire.']);
+  else if(!C.clip(M.mois,P.conventionDebut,P.conventionFin))out.push(['stop',`${C.moisLabel(M.mois)} est hors de la convention (${C.dateFr(P.conventionDebut)} → ${C.dateFr(P.conventionFin)}).`]);
+  if(min==null)out.push(['warn',`Minimum légal ${y} non renseigné dans l’outil (tableau MINIMA) : contrôle du taux impossible.`]);
+  else if(+d.taux<min-1e-9)out.push([obligatoire?'stop':'warn',`Taux ${E(d.taux)}/h inférieur au minimum légal ${y} (${E(min)}/h)${obligatoire?'':' — toléré seulement si le stage dure 2 mois ou moins'}.`]);
+  else if(M.depasseSeuil)out.push(['warn',`Taux au-dessus de ${E(min)}/h : la fraction excédentaire est soumise à cotisations. Le net affiché ne les déduit pas — à faire valider par le cabinet.`]);
+  if(!obligatoire&&P.conventionDebut&&P.conventionFin)out.push(['info','Convention de 2 mois ou moins : la gratification n’est pas obligatoire.']);
+  if(hConv>924)out.push(['warn',`Convention de ${Math.round(hConv)} h prévues : au-delà du maximum légal de 924 h (6 mois) par année d’enseignement.`]);
+  const miss=[['adresse','adresse'],['cpVille','code postal et ville'],['numSS','n° de sécurité sociale'],['ecole','établissement']].filter(([k])=>!(P[k]||'').trim()).map(([,l])=>l);
+  if(miss.length)out.push(['warn','Fiche incomplète : '+miss.join(', ')+'.']);
+  if(!M.emis){
+    const A=M.A;
+    if(A.tps.saisi&&A.tps.jours!==A.cal)out.push(['warn',`Les sources divergent : ${C.num(A.tps.jours)} j au suivi de temps, ${C.num(A.cal)} j au calendrier. Vérifie avant d’émettre.`]);
+    if(!A.tps.saisi)out.push(['info','Aucune heure saisie au suivi de temps ce mois-ci.']);
+    if(M.manquants.length)out.push(['warn','Mois antérieurs non émis : '+M.manquants.map(x=>C.moisLabel(x)).join(', ')+'. Le cumul n’en tient pas compte.']);
+    const apres=Object.keys(BULL[pid]||{}).filter(x=>x>M.mois&&BULL[pid][x].statut==='emis');
+    if(apres.length)out.push(['warn','Des bulletins postérieurs sont déjà émis ('+apres.map(x=>C.moisLabel(x)).join(', ')+') : leur cumul devra être réémis.']);
+    if(M.jours===0)out.push(['warn','Zéro jour de présence retenu.']);
+  }
+  if(!out.some(o=>o[0]==='stop'||o[0]==='warn'))out.push(['ok','Rien à signaler.']);
+  return out;
+}
+
+/* ── rendu ── */
+function refresh(){
+  if(loaded.size<5)return;
+  const list=stagiaires();
+  $('#noIntern').classList.toggle('hidden',list.length>0);
+  $('#work').classList.toggle('hidden',!list.length);$('#histo').classList.toggle('hidden',!list.length);
+  if(!list.length)return;
+  if(!pid||!list.some(p=>p.id===pid))pid=list[0].id;
+  $('#selP').innerHTML=list.map(p=>`<option value="${esc(p.id)}">${esc(p.nom)} (${esc(p.id)})</option>`).join('');
+  $('#selP').value=pid;
+  const P=params(pid), ms=moisConvention(P), cur=C.ymd(new Date()).slice(0,7);
+  if(!mois||!ms.includes(mois))mois=ms.includes(cur)?cur:(ms.find(x=>x>cur)||ms[ms.length-1]||C.DEBUT_OUTIL);
+  $('#selM').innerHTML=(ms.length?ms:[mois]).map(m=>{const b=bull(pid,m);
+    return `<option value="${m}">${C.moisLabel(m)}${b?(b.statut==='emis'?' · émis':' · brouillon'):''}</option>`;}).join('');
+  $('#selM').value=mois;
+  chips(list);
+  if(!dirty)chargerDraft();
+  if(!ficheDirty)remplirFiche();
+  render();
+}
+function chips(list){
+  $('#chips').innerHTML=list.map(p=>{const P=params(p.id),act=!!C.clip(mois,P.conventionDebut,P.conventionFin);if(!act)return'';
+    const b=bull(p.id,mois),st=b?b.statut:'';
+    return `<button class="chip${p.id===pid?' on':''}" data-id="${esc(p.id)}"><span class="dot ${st}"></span>${esc(p.nom)} <span class="muted">${st==='emis'?'émis':st==='brouillon'?'brouillon':'à faire'}</span></button>`;}).join('');
+  $$('#chips .chip').forEach(b=>b.onclick=()=>changer(b.dataset.id,mois));
+}
+function chargerDraft(){
+  const b=bull(pid,mois);
+  draft=b?JSON.parse(JSON.stringify(b)):nouveauDraft(pid,mois);
+  draft.lignes=draft.lignes||[];draft.navigo=draft.navigo||{actif:false,montant:0};draft.tr=draft.tr||{nombre:0,valeur:0};
+}
+function remplirFiche(){
+  const P=params(pid),s=periodeStage(person(pid)||{})||{};
+  $$('[data-p]').forEach(el=>{el.value=P[el.dataset.p]??'';});
+  $('#refDeb').textContent=s.debut&&s.debut!==P.conventionDebut?`Référentiel : ${C.dateFr(s.debut)}`:'';
+  $('#refFin').textContent=s.fin&&s.fin!==P.conventionFin?`Référentiel : ${C.dateFr(s.fin)}`:'';
+  const sv=PARAMS[pid];
+  $('#ficheState').textContent=sv?'':'pas encore enregistrée';
+  $('#ficheMaj').textContent=sv&&sv.majLe?`Mise à jour le ${new Date(sv.majLe).toLocaleDateString('fr-FR')} par ${sv.majPar}`:'';
+  if(!sv)$('#pFiche').open=true;
+  const y=+(P.conventionDebut||C.ymd(new Date())).slice(0,4);
+  $('#tauxHint').textContent=C.MINIMA[y]!=null?`Minimum légal ${y} : ${E(C.MINIMA[y])}/h`:`Minimum ${y} à renseigner dans l’outil`;
+}
+function render(){
+  if(!draft)return;
+  const P=params(pid), M=modele(pid,mois,draft), A=M.A, emis=M.emis;
+  const c=C.clip(mois,P.conventionDebut,P.conventionFin);
+  $('#convInfo').textContent=c?`${C.dateFr(c[0])} → ${C.dateFr(c[1])} · ${C.ouvres(c[0],c[1])} j ouvrés`:'hors convention';
+  $('#vTemps').textContent=A.tps.saisi?C.num(A.tps.jours)+' j':'—';
+  $('#sTemps').textContent=A.tps.saisi?`${C.num(A.tps.heures)} h saisies`:'rien de saisi';
+  $('#vCal').textContent=C.num(A.cal)+' j';
+  $('#sCal').textContent=A.ab.total?`jours ouvrés − ${C.num(A.ab.total)} j d’absence`:'jours ouvrés, sans absence';
+  $$('input[name=src]').forEach(r=>{r.checked=r.value===draft.source;r.disabled=emis;});
+  $('#manJ').value=draft.source==='manuel'?(draft.joursManuel??''):'';$('#manJ').disabled=emis;
+  $('#manJ').placeholder=C.num(A.cal);
+  const ab=emis?(draft.absences||{}):A.ab.par;
+  $('#absTxt').textContent=Object.keys(ab).length?Object.entries(ab).map(([k,v])=>`${k} ${C.num(v)} j`).join(', '):'aucune';
+  $('#hTxt').textContent=`${C.num(M.jours)} j × ${C.num(M.heuresJour)} h = ${C.num(M.heures)} h`;
+  $('#navOn').checked=!!draft.navigo.actif;$('#navM').value=draft.navigo.montant??'';
+  $('#navOn').disabled=$('#navM').disabled=emis;
+  $('#lines').innerHTML=draft.lignes.map((l,i)=>`<div class="row">
+    <input type="text" data-l="${i}" data-k="libelle" value="${esc(l.libelle)}" placeholder="Libellé" ${emis?'disabled':''}>
+    <input type="number" step="0.01" data-l="${i}" data-k="montant" value="${esc(l.montant)}" placeholder="Montant" ${emis?'disabled':''}>
+    <select data-l="${i}" data-k="type" ${emis?'disabled':''}><option value="frais"${l.type!=='gratif'?' selected':''}>Remboursement de frais</option><option value="gratif"${l.type==='gratif'?' selected':''}>Régularisation de gratification</option></select>
+    <button class="btn ghost" data-rm="${i}" aria-label="Retirer la ligne" ${emis?'disabled':''}>✕</button></div>`).join('');
+  $('#addLine').disabled=emis;
+  $('#trMois').textContent=`(${C.moisLabel(C.addMonth(mois))})`;
+  $('#trN').value=draft.tr.nombre??0;$('#trN').disabled=emis||!(+P.trValeur>0);
+  $('#trHint').textContent=+P.trValeur>0?`${E(draft.tr.valeur||P.trValeur)} l’unité · proposition : ${A.trN} (jours ouvrés prévus − absences déjà posées)`:'Titres-restaurant désactivés dans la fiche.';
+  $('#payD').value=draft.datePaiement||'';$('#payD').disabled=emis;
+  const ch=controles(M,emis&&draft.snapshot?draft.snapshot:P,draft);
+  $('#checks').innerHTML=ch.map(([k,m])=>`<li class="${k}">${esc(m)}</li>`).join('');
+  $('#emit').disabled=ch.some(x=>x[0]==='stop');
+  $('#actDraft').classList.toggle('hidden',emis);$('#actEmis').classList.toggle('hidden',!emis);
+  $('#delDraft').classList.toggle('hidden',draft.statut!=='brouillon');
+  $('#emisBanner').innerHTML=emis?`<div class="banner ok">Émis le ${C.dateFr(draft.emisLe)} par ${esc(draft.emisPar)}${draft.version>1?` · version ${draft.version}`:''}. Verrouillé : rouvre-le pour corriger.</div>`:'';
+  $('#bState').textContent=emis?'':dirty?'Modifications non enregistrées':draft.statut==='brouillon'?`Brouillon enregistré${draft.majLe?' le '+new Date(draft.majLe).toLocaleDateString('fr-FR'):''}`:'Nouveau bulletin';
+  sheet(M);histo(P);
+}
+function sheet(M){
+  const t=C.T[M.lang]||C.T.fr,S=M.societe,P=M.stagiaire,L=M.lang;
+  const absTxt=Object.keys(M.absences||{}).length?Object.entries(M.absences).map(([k,v])=>`${L==='en'?(C.ABS_EN[k]||k):k} ${C.num(v)} ${t.d}`).join(', '):t.none;
+  const rows=[[t.stipend,`${C.num(M.jours)} ${t.d} × ${C.num(M.heuresJour)} ${t.h} = ${C.num(M.heures)} ${t.h}`,E(M.taux),E(M.gratifBase)],
+    ...M.lignes.filter(l=>l.type==='gratif').map(l=>[l.libelle||t.regul,'','',E(l.montant)]),
+    ...(M.navigo?[[t.navigo,'','',E(M.navigo)]]:[]),
+    ...M.lignes.filter(l=>l.type!=='gratif').map(l=>[l.libelle||'—','','',E(l.montant)])];
+  $('#sheet').innerHTML=`${M.emis?'':`<div class="wm">${t.draft}</div>`}
+  <div class="sh-top"><div class="sh-mark">MATIÈRE NOIRE</div>
+    <div class="sh-title"><b>${esc(t.title)}</b><span>${esc(t.period)}${t.sep}${esc(C.moisLabel(M.mois,L))}</span>${M.version>1?`<br><span>${esc(t.version(M.version))}</span>`:''}</div></div>
+  <div class="sh-cols">
+    <div><h4>${esc(t.host)}</h4><p><b>${esc(S.raison)}</b><br>${esc(S.adresse)}<br>${esc(S.cpVille)}<br>${t.siret} ${S.siret} · ${t.naf} ${S.naf}<br>${t.urssaf} ${S.urssaf}</p></div>
+    <div><h4>${esc(t.intern)}</h4><p><b>${esc(`${P.prenom||''} ${P.nom||''}`.trim()||'—')}</b><br>${esc(P.adresse||'—')}<br>${esc(P.cpVille||'—')}<br>${esc(t.ss)}${t.sep}${esc(P.numSS||'—')}<br>${esc(t.school)}${t.sep}${esc(P.ecole||'—')}<br>${esc(t.conv)} ${t.du} ${C.dateFr(P.conventionDebut)||'—'} ${t.au} ${C.dateFr(P.conventionFin)||'—'}</p></div>
+  </div>
+  <table class="sh-t"><thead><tr><th>${esc(t.label)}</th><th class="r">${esc(t.base)}</th><th class="r">${esc(t.rate)}</th><th class="r">${esc(t.amount)}</th></tr></thead>
+  <tbody>${rows.map(r=>`<tr><td>${esc(r[0])}</td><td class="r">${esc(r[1])}</td><td class="r">${r[2]}</td><td class="r">${r[3]}</td></tr>`).join('')}
+  <tr class="tot"><td colspan="3">${esc(t.net)}</td><td class="r">${E(M.net)}</td></tr></tbody></table>
+  <p class="muted" style="margin:-.8em 0 1.6em">${esc(t.paid(C.dateFr(M.datePaiement)))}</p>
+  <div class="sh-sec">
+    <div><h4>${esc(t.presence)}</h4><div class="kv"><span>${t.days}</span><span>${C.num(M.jours)} ${t.d}</span></div><div class="kv"><span>${t.hours}</span><span>${C.num(M.heures)} ${t.h}</span></div><div class="kv"><span>${t.absences}</span><span>${esc(absTxt)}</span></div></div>
+    <div><h4>${esc(t.cumul)}</h4><div class="kv"><span>${t.cHours}</span><span>${C.num(M.heuresCumulApres)} ${t.h}</span></div><div class="kv"><span>${t.cStip}</span><span>${E(M.cumulApres)}</span></div></div>
+  </div>
+  <div class="sh-sec" style="grid-template-columns:1fr"><div><h4>${esc(t.tr)}</h4>${esc(M.tr&&M.tr.nombre>0?t.trLine(M.tr.nombre,C.eur(M.tr.valeur),C.moisLabel(C.addMonth(M.mois),L)):t.trNone)}</div></div>
+  <div class="sh-legal">${[t.legal1,M.depasseSeuil?t.legalOver:null,M.navigo?t.legal2:null,t.legal3].filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}
+    <p>${esc(M.emis?t.issued(C.dateFr(M.emisLe),M.emisPar):t.notIssued)}</p></div>`;
+}
+function histo(P){
+  const ms=moisConvention(P);let rows='';
+  ms.forEach(m=>{const b=bull(pid,m);
+    rows+=`<tr class="${m===mois?'cur':''}"><td>${C.moisLabel(m)}</td>
+      <td>${b?`<span class="tag ${b.statut}">${b.statut==='emis'?'émis'+(b.version>1?' v'+b.version:''):'brouillon'}</span>`:'<span class="tag">à faire</span>'}</td>
+      <td class="r">${b&&b.statut==='emis'?C.num(b.jours)+' j':''}</td><td class="r">${b&&b.statut==='emis'?E(b.gratification):''}</td>
+      <td class="r">${b&&b.statut==='emis'?E(b.net):''}</td><td class="r">${b&&b.statut==='emis'?E(b.cumulApres):''}</td>
+      <td class="r"><button class="btn ghost" data-go="${m}">Ouvrir</button>${b&&b.statut==='emis'?` <button class="btn ghost" data-dl="${m}">PDF</button>`:''}</td></tr>`;});
+  $('#histoT').innerHTML=`<thead><tr><th>Mois</th><th>Statut</th><th class="r">Jours</th><th class="r">Gratification</th><th class="r">Net versé</th><th class="r">Cumul</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">Renseigne les dates de convention.</td></tr>'}</tbody>`;
+  $('#histoInfo').textContent=(ms.length?`${ms.length} mois suivis dans l’outil, de ${C.moisLabel(ms[0])} à ${C.moisLabel(ms[ms.length-1])}`:'')+(+P.cumulReprise?` · reprise ${E(P.cumulReprise)}`:'');
+  $$('[data-go]').forEach(b=>b.onclick=()=>changer(pid,b.dataset.go));
+  $$('[data-dl]').forEach(b=>b.onclick=()=>telecharger(modele(pid,b.dataset.dl,bull(pid,b.dataset.dl))));
+}
+
+/* ── interactions ── */
+function changer(id,m){
+  if((dirty||ficheDirty)&&!confirm('Des modifications ne sont pas enregistrées. Les abandonner ?'))return;
+  dirty=ficheDirty=false;pid=id;mois=m;draft=null;refresh();
+}
+$('#selP').onchange=e=>{const id=e.target.value;changer(id,null);};
+$('#selM').onchange=e=>changer(pid,e.target.value);
+$('#showArch').onchange=()=>refresh();
+const touch=()=>{dirty=true;render();};
+$$('input[name=src]').forEach(r=>r.onchange=()=>{draft.source=r.value;if(r.value==='manuel'&&draft.joursManuel==null)draft.joursManuel=modele(pid,mois,{...draft,source:'calendrier'}).jours;touch();});
+$('#manJ').oninput=e=>{draft.source='manuel';draft.joursManuel=e.target.value===''?null:+e.target.value;dirty=true;renderSoft();};
+$('#navOn').onchange=e=>{draft.navigo.actif=e.target.checked;touch();};
+$('#navM').oninput=e=>{draft.navigo.montant=+e.target.value||0;dirty=true;renderSoft();};
+$('#trN').oninput=e=>{draft.tr.nombre=Math.max(0,parseInt(e.target.value)||0);dirty=true;renderSoft();};
+$('#payD').onchange=e=>{draft.datePaiement=e.target.value;touch();};
+$('#addLine').onclick=()=>{draft.lignes.push({libelle:'',montant:0,type:'frais'});touch();};
+$('#lines').addEventListener('input',e=>{const el=e.target;if(el.dataset.l==null)return;const l=draft.lignes[+el.dataset.l];
+  l[el.dataset.k]=el.dataset.k==='montant'?(+el.value||0):el.value;dirty=true;
+  if(el.tagName==='SELECT')render();else renderSoft();});
+$('#lines').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(!b)return;draft.lignes.splice(+b.dataset.rm,1);touch();});
+/* rendu sans reconstruire les champs en cours de saisie */
+function renderSoft(){const P=params(pid),M=modele(pid,mois,draft);sheet(M);
+  $('#hTxt').textContent=`${C.num(M.jours)} j × ${C.num(M.heuresJour)} h = ${C.num(M.heures)} h`;
+  const ch=controles(M,P,draft);$('#checks').innerHTML=ch.map(([k,m])=>`<li class="${k}">${esc(m)}</li>`).join('');
+  $('#emit').disabled=ch.some(x=>x[0]==='stop');$('#bState').textContent='Modifications non enregistrées';}
+
+$$('[data-p]').forEach(el=>el.addEventListener('input',()=>{ficheDirty=true;$('#ficheState').textContent='modifiée, non enregistrée';}));
+$('#saveFiche').onclick=async()=>{
+  const v={};$$('[data-p]').forEach(el=>{const k=el.dataset.p;v[k]=el.type==='number'?(el.value===''?0:+el.value):el.value.trim();});
+  if(v.conventionDebut&&v.conventionFin&&v.conventionDebut>v.conventionFin){toast('La fin de convention précède le début.');return;}
+  v.majLe=Date.now();v.majPar=user.email.split('@')[0];
+  try{await set(ref(db,`${ROOT}/params/${pid}`),v);ficheDirty=false;
+    if(draft&&draft.statut!=='emis'){draft.heuresJour=+v.heuresJour;draft.taux=+v.taux;draft.tr.valeur=+v.trValeur;
+      if(!dirty&&draft.statut==='nouveau')draft=null;}
+    toast('Fiche enregistrée');refresh();}
+  catch(e){toast('Enregistrement refusé : '+e.message);}
+};
+function aEnregistrer(M,statut){
+  const d=draft;
+  return{statut,version:d.version||1,source:d.source,joursManuel:d.source==='manuel'?(+d.joursManuel||0):null,
+    jours:M.jours,heuresJour:M.heuresJour,heures:M.heures,taux:M.taux,gratifBase:M.gratifBase,
+    lignes:M.lignes.map(l=>({libelle:l.libelle||'',montant:C.r2(l.montant),type:l.type==='gratif'?'gratif':'frais'})),
+    navigo:{actif:!!d.navigo.actif,montant:C.r2(d.navigo.montant)},gratification:M.gratification,net:M.net,
+    absences:M.absences,tr:{nombre:+d.tr.nombre||0,valeur:+d.tr.valeur||0},datePaiement:d.datePaiement||'',
+    cumulAvant:M.cumulAvant,cumulApres:M.cumulApres,heuresCumulAvant:M.heuresCumulAvant,heuresCumulApres:M.heuresCumulApres,
+    majLe:Date.now(),majPar:user.email.split('@')[0],historique:d.historique||null};
+}
+$('#saveDraft').onclick=async()=>{
+  const M=modele(pid,mois,draft);
+  try{await set(ref(db,`${ROOT}/bulletins/${pid}/${mois}`),aEnregistrer(M,'brouillon'));dirty=false;draft=null;toast('Brouillon enregistré');refresh();}
+  catch(e){toast('Enregistrement refusé : '+e.message);}
+};
+$('#delDraft').onclick=async()=>{
+  if(!confirm(`Supprimer le brouillon de ${C.moisLabel(mois)} ?`))return;
+  try{await remove(ref(db,`${ROOT}/bulletins/${pid}/${mois}`));dirty=false;draft=null;toast('Brouillon supprimé');refresh();}
+  catch(e){toast('Suppression refusée : '+e.message);}
+};
+$('#previewPdf').onclick=()=>telecharger(modele(pid,mois,draft),true);
+$('#emit').onclick=async()=>{
+  if(ficheDirty){toast('Enregistre d’abord la fiche stagiaire.');$('#pFiche').open=true;return;}
+  const P=params(pid),M=modele(pid,mois,draft),w=controles(M,P,draft).filter(x=>x[0]==='warn');
+  const msg=`Émettre le bulletin de ${C.moisLabel(mois)} pour ${P.prenom} ${P.nom} ?\n\nNet à payer : ${C.eur(M.net)}\nCumul après ce mois : ${C.eur(M.cumulApres)}`+
+    (w.length?`\n\nPoints d’attention :\n– `+w.map(x=>x[1]).join('\n– '):'')+`\n\nLe bulletin sera verrouillé.`;
+  if(!confirm(msg))return;
+  const rec=aEnregistrer(M,'emis');
+  rec.emisLe=C.ymd(new Date());rec.emisPar=user.email.split('@')[0];
+  rec.snapshot={prenom:P.prenom,nom:P.nom,adresse:P.adresse,cpVille:P.cpVille,numSS:P.numSS,ecole:P.ecole,
+    conventionDebut:P.conventionDebut,conventionFin:P.conventionFin,langue:P.langue};
+  try{await set(ref(db,`${ROOT}/bulletins/${pid}/${mois}`),rec);dirty=false;
+    telecharger(modele(pid,mois,rec));draft=null;toast('Bulletin émis');refresh();}
+  catch(e){toast('Émission refusée : '+e.message);}
+};
+$('#dlPdf').onclick=()=>telecharger(modele(pid,mois,draft));
+$('#reopen').onclick=async()=>{
+  if(!confirm(`Rouvrir le bulletin de ${C.moisLabel(mois)} ?\n\nLa version émise est conservée dans l’historique. La prochaine émission portera la mention « annule et remplace ».`))return;
+  const b=bull(pid,mois),prev={...b};delete prev.historique;
+  const h={...(b.historique||{})};h['v'+(b.version||1)]=prev;
+  try{await update(ref(db,`${ROOT}/bulletins/${pid}/${mois}`),{statut:'brouillon',version:(b.version||1)+1,historique:h,
+      emisLe:null,emisPar:null,snapshot:null,majLe:Date.now(),majPar:user.email.split('@')[0]});
+    draft=null;dirty=false;toast('Bulletin rouvert');refresh();}
+  catch(e){toast('Réouverture refusée : '+e.message);}
+};
+function telecharger(M,apercu){
+  if(!window.jspdf){toast('Bibliothèque PDF non chargée — vérifie la connexion.');return;}
+  const d=C.pdf(M,window.jspdf.jsPDF),f=C.nomFichier(M.stagiaire,M.mois);
+  if(apercu)window.open(d.output('bloburl'),'_blank');else d.save(f);
+}
+window.addEventListener('beforeunload',e=>{if(dirty||ficheDirty){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
