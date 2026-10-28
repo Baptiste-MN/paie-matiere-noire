@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Bulletins de stage · Matière Noire</title>
+<title>Bulletins de stage · Matiere Noire</title>
 <style>
 :root{
   --paper:#F7F7F5; --ink:#14161A; --ink2:#5C6169; --ink3:#8C9199;
@@ -124,7 +124,7 @@ table.h tr.cur td{background:var(--paper)}
 </head>
 <body>
 <header>
-  <h1><a href="https://baptiste-mn.github.io/mn/">Matière Noire</a> / Bulletins de stage</h1>
+  <h1><a href="https://baptiste-mn.github.io/mn/">Matiere Noire</a> / Bulletins de stage</h1>
   <div class="who"><span id="who"></span><button class="btn hidden" id="out">Se déconnecter</button></div>
 </header>
 
@@ -163,6 +163,7 @@ table.h tr.cur td{background:var(--paper)}
               <label>Heures par jour<input type="number" step="0.25" min="0" data-p="heuresJour"></label>
               <label>Prix du pass Navigo mensuel (€)<input type="number" step="0.01" min="0" data-p="navigoPrix"><span class="hint">Remboursé à 50 %.</span></label>
               <label>Valeur d’un titre-restaurant (€)<input type="number" step="0.01" min="0" data-p="trValeur"><span class="hint">0 = pas de titres-restaurant.</span></label>
+              <label>Part payée par le stagiaire (%)<input type="number" step="1" min="0" max="100" data-p="trPartSal"><span class="hint" id="trPartHint">Retenue sur le net. 40 % = 60 % pris en charge par le studio.</span></label>
               <label>Langue du bulletin<select data-p="langue"><option value="fr">Français</option><option value="en">English</option></select></label>
               <span></span>
               <label>Gratification déjà versée avant l’outil (€)<input type="number" step="0.01" min="0" data-p="cumulReprise"><span class="hint">Pour un stage commencé avant octobre 2026.</span></label>
@@ -251,6 +252,8 @@ const SOCIETE={raison:'SAS MATIERE NOIRE PARIS',adresse:'20 rue Saint Sauveur',c
 const MINIMA={2025:4.35,2026:4.50};
 /* Mois à partir duquel l'outil est la source des bulletins (pas de reprise antérieure). */
 const DEBUT_OUTIL='2026-10';
+/* Plafond d’exonération de la part employeur d’un titre-restaurant, par année — à compléter chaque janvier */
+const TR_PLAFOND={2026:7.32};
 
 const MOIS={fr:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
   en:['January','February','March','April','May','June','July','August','September','October','November','December']};
@@ -262,7 +265,8 @@ const T={
   stipend:'Gratification de stage',regul:'Régularisation',navigo:'Remboursement pass Navigo (50 %)',net:'Net à payer',
   paid:d=>`Payé par virement le ${d}`,presence:'Présence du mois',days:'Jours de présence',hours:'Heures de présence',
   absences:'Absences',none:'aucune',cumul:'Cumuls depuis le début du stage',cHours:'Heures effectuées',cStip:'Gratification versée',
-  tr:'Titres-restaurant (hors net à payer)',trLine:(n,v,m)=>`${n} titre${n>1?'s':''} × ${v} — à remettre en ${m}`,trNone:'aucun',
+  tr:'Titres-restaurant (hors net à payer)',trR:'Titres-restaurant',trLine:(n,v,m)=>`${n} titre${n>1?'s':''} × ${v} — à remettre en ${m}`,trNone:'aucun',
+  trRet:p=>`Titres-restaurant — part stagiaire (${p} %)`,trSplit:(e,s)=>` — part studio ${e}, part stagiaire ${s} retenue ci-dessus`,
   d:'j',h:'h',issued:(d,w)=>`Émis le ${d} par ${w}`,draft:'BROUILLON',notIssued:'Document non émis — ne pas transmettre',
   legal1:'Gratification versée en application de l’article L.124-6 du Code de l’éducation. Elle est exonérée de cotisations et contributions sociales dans la limite de 15 % du plafond horaire de la Sécurité sociale par heure de stage.',
   legalOver:'Le taux horaire dépasse le seuil d’exonération : la fraction excédentaire est soumise à cotisations et n’est pas traitée par ce document.',
@@ -274,7 +278,8 @@ const T={
   stipend:'Internship stipend',regul:'Adjustment',navigo:'Navigo pass reimbursement (50%)',net:'Net payable',
   paid:d=>`Paid by bank transfer on ${d}`,presence:'Attendance this month',days:'Days of attendance',hours:'Hours of attendance',
   absences:'Absences',none:'none',cumul:'Totals since the start of the internship',cHours:'Hours completed',cStip:'Stipend paid',
-  tr:'Meal vouchers (not included in net payable)',trLine:(n,v,m)=>`${n} voucher${n>1?'s':''} × ${v} — to be issued in ${m}`,trNone:'none',
+  tr:'Meal vouchers (not included in net payable)',trR:'Meal vouchers',trLine:(n,v,m)=>`${n} voucher${n>1?'s':''} × ${v} — to be issued in ${m}`,trNone:'none',
+  trRet:p=>`Meal vouchers — intern share (${p}%)`,trSplit:(e,s)=>` — host share ${e}, intern share ${s} deducted above`,
   d:'d',h:'h',issued:(d,w)=>`Issued on ${d} by ${w}`,draft:'DRAFT',notIssued:'Not issued — do not send',
   legal1:'Stipend paid pursuant to Article L.124-6 of the French Education Code. It is exempt from social security contributions up to 15% of the hourly Social Security ceiling per hour of internship.',
   legalOver:'The hourly rate exceeds the exemption threshold: the excess portion is subject to contributions and is not covered by this document.',
@@ -330,6 +335,12 @@ function absences(conges,nom,m,deb,fin){
 }
 function joursCalendrier(m,deb,fin,absTotal){const c=clip(m,deb,fin);return c?Math.max(0,ouvres(c[0],c[1])-absTotal):0;}
 
+/* Titres-restaurant : parts employeur / stagiaire. Sans taux enregistré (bulletins antérieurs), aucune retenue. */
+function trParts(tr){
+ const n=+(tr&&tr.nombre)||0,v=+(tr&&tr.valeur)||0,p=tr&&tr.partSal!=null&&tr.partSal!==''?+tr.partSal:null;
+ if(p==null||!n||!v)return{actif:p!=null,taux:p,unitSal:p!=null?r2(v*p/100):0,unitEmp:p!=null?r2(v-r2(v*p/100)):0,salarie:0};
+ const unitSal=r2(v*p/100);return{actif:true,taux:p,unitSal,unitEmp:r2(v-unitSal),salarie:r2(n*unitSal)};
+}
 /* Totaux d'un bulletin */
 function totaux(b){
  const heures=r2((+b.jours||0)*(+b.heuresJour||0));
@@ -339,7 +350,8 @@ function totaux(b){
  const frais=r2(L.filter(l=>l.type!=='gratif').reduce((s,l)=>s+(+l.montant||0),0));
  const navigo=b.navigo&&b.navigo.actif?r2(b.navigo.montant):0;
  const gratification=r2(gratifBase+regul);
- return{heures,gratifBase,regul,frais,navigo,gratification,net:r2(gratification+frais+navigo),lignes:L};
+ const trRetenue=trParts(b.tr).salarie;
+ return{heures,gratifBase,regul,frais,navigo,gratification,trRetenue,net:r2(gratification+frais+navigo-trRetenue),lignes:L};
 }
 
 function nomFichier(s,m){
@@ -361,7 +373,7 @@ function pdf(M,jsPDF){
  const hr=(yy,w=.2,c=rule)=>{doc.setDrawColor(...c);doc.setLineWidth(w);doc.line(X,yy,R,yy);};
  if(!M.emis){doc.saveGraphicsState&&doc.saveGraphicsState();doc.setGState&&doc.setGState(new doc.GState({opacity:.09}));
   txt(t.draft,62,200,{s:70,b:true,c:[166,58,43],ang:30});doc.restoreGraphicsState&&doc.restoreGraphicsState();}
- txt('MATIÈRE NOIRE',X,y+2,{s:12,b:true,cs:1.1});
+ txt('MATIERE NOIRE',X,y+2,{s:12,b:true,cs:1.1});
  txt(t.title,R,y,{s:12,b:true,a:'right'});
  txt(`${t.period}${t.sep}${moisLabel(M.mois,L)}`,R,y+5.5,{s:9,c:g2,a:'right'});
  if(M.version>1)txt(t.version(M.version),R,y+10,{s:8,c:g2,a:'right'});
@@ -384,6 +396,7 @@ function pdf(M,jsPDF){
  M.lignes.filter(l=>l.type==='gratif').forEach(l=>row(l.libelle||t.regul,'','',eur(l.montant)));
  if(M.navigo)row(t.navigo,'','',eur(M.navigo));
  M.lignes.filter(l=>l.type!=='gratif').forEach(l=>row(l.libelle||'—','','',eur(l.montant)));
+ if(M.trRetenue){const q=trParts(M.tr);row(t.trRet(num(q.taux)),`${M.tr.nombre} × ${eur(M.tr.valeur)}`,`${num(q.taux)} %`,eur(-M.trRetenue));}
  y-=4.6;hr(y,.5,ink);y+=6;
  txt(t.net,X,y,{s:11,b:true});txt(eur(M.net),R,y,{s:11,b:true,a:'right'});y+=5;
  txt(t.paid(dateFr(M.datePaiement)),X,y,{s:8,c:g2});y+=11;
@@ -393,8 +406,8 @@ function pdf(M,jsPDF){
  const y1=col(t.presence,[[t.days,`${num(M.jours)} ${t.d}`],[t.hours,`${num(M.heures)} ${t.h}`],[t.absences,absTxt]],X);
  const y2=col(t.cumul,[[t.cHours,`${num(M.heuresCumulApres)} ${t.h}`],[t.cStip,eur(M.cumulApres)]],c2);
  y=Math.max(y1,y2)+5;
- txt(t.tr,X,y,{s:8,c:g3});y+=5;
- txt(M.tr&&M.tr.nombre>0?t.trLine(M.tr.nombre,eur(M.tr.valeur),moisLabel(addMonth(M.mois),L)):t.trNone,X,y);
+ const q=trParts(M.tr);txt(q.actif?t.trR:t.tr,X,y,{s:8,c:g3});y+=5;
+ wrap(M.tr&&M.tr.nombre>0?t.trLine(M.tr.nombre,eur(M.tr.valeur),moisLabel(addMonth(M.mois),L))+(q.actif?t.trSplit(eur(q.unitEmp),eur(q.unitSal)):''):t.trNone,X,y,W);
  const legal=[t.legal1,M.depasseSeuil?t.legalOver:null,M.navigo?t.legal2:null,t.legal3].filter(Boolean);
  doc.setFontSize(7);const nl=legal.reduce((s,x)=>s+doc.splitTextToSize(x,W).length,0);
  let yl=Math.max(y+14,283-nl*3-legal.length*1.2);hr(yl-5);
@@ -404,7 +417,7 @@ function pdf(M,jsPDF){
  return doc;
 }
 
-window.CORE={SOCIETE,MINIMA,DEBUT_OUTIL,T,ABS_EN,p2,ymd,pl,r2,ouvre,ouvres,feries,monthStart,monthEnd,addMonth,moisLabel,dateFr,
+window.CORE={SOCIETE,MINIMA,DEBUT_OUTIL,TR_PLAFOND,trParts,T,ABS_EN,p2,ymd,pl,r2,ouvre,ouvres,feries,monthStart,monthEnd,addMonth,moisLabel,dateFr,
  clip,lastOuvre,eur,num,joursTemps,absences,joursCalendrier,totaux,nomFichier,pdf};
 })();
 </script>
@@ -483,7 +496,7 @@ function params(id){
   const annee=+(s.debut||C.ymd(new Date())).slice(0,4);
   return{prenom:pre||'',nom:rest.join(' '),adresse:'',cpVille:'',numSS:'',ecole:'',
     conventionDebut:s.debut||'',conventionFin:s.fin||'',taux:C.MINIMA[annee]??C.MINIMA[2026],heuresJour:7,
-    navigoPrix:0,trValeur:10,langue:'fr',cumulReprise:0,heuresReprise:0,...sv};
+    navigoPrix:0,trValeur:10,trPartSal:40,langue:'fr',cumulReprise:0,heuresReprise:0,...sv};
 }
 const bull=(id,m)=>((BULL[id]||{})[m])||null;
 function moisConvention(P){
@@ -515,7 +528,7 @@ function nouveauDraft(id,m){
   const P=params(id),A=auto(id,m,P);
   const source=A.tps.saisi?'temps':'calendrier';
   return{statut:'nouveau',version:1,source,joursManuel:null,heuresJour:+P.heuresJour,taux:+P.taux,
-    lignes:[],navigo:{actif:+P.navigoPrix>0,montant:C.r2(+P.navigoPrix/2)},tr:{nombre:A.trN,valeur:+P.trValeur},
+    lignes:[],navigo:{actif:+P.navigoPrix>0,montant:C.r2(+P.navigoPrix/2)},tr:{nombre:A.trN,valeur:+P.trValeur,partSal:+P.trPartSal},
     datePaiement:C.lastOuvre(m)};
 }
 function joursRetenus(d,A){return d.source==='temps'?A.tps.jours:d.source==='calendrier'?A.cal:(+d.joursManuel||0);}
@@ -525,7 +538,7 @@ function modele(id,m,d){
   const emis=d.statut==='emis';
   const P=emis&&d.snapshot?d.snapshot:params(id), A=auto(id,m,params(id));
   const jours=emis?+d.jours:joursRetenus(d,A);
-  const base={jours,heuresJour:+d.heuresJour,taux:+d.taux,lignes:d.lignes||[],navigo:d.navigo};
+  const base={jours,heuresJour:+d.heuresJour,taux:+d.taux,lignes:d.lignes||[],navigo:d.navigo,tr:d.tr};
   const tt=C.totaux(base);
   const cu=emis?{g:+d.cumulAvant,h:+d.heuresCumulAvant,manquants:[]}:cumulAvant(id,m,params(id));
   const seuil=C.MINIMA[+m.slice(0,4)];
@@ -553,6 +566,11 @@ function controles(M,P,d){
   if(hConv>924)out.push(['warn',`Convention de ${Math.round(hConv)} h prévues : au-delà du maximum légal de 924 h (6 mois) par année d’enseignement.`]);
   const miss=[['adresse','adresse'],['cpVille','code postal et ville'],['numSS','n° de sécurité sociale'],['ecole','établissement']].filter(([k])=>!(P[k]||'').trim()).map(([,l])=>l);
   if(miss.length)out.push(['warn','Fiche incomplète : '+miss.join(', ')+'.']);
+  const q=C.trParts(d.tr);
+  if(q.actif&&+(d.tr&&d.tr.valeur)>0){const pl=C.TR_PLAFOND[y];
+    if(q.taux<40||q.taux>50)out.push(['warn',`Part stagiaire des titres-restaurant à ${C.num(q.taux)} % : pour rester exonérée, elle doit être comprise entre 40 et 50 %.`]);
+    if(pl==null)out.push(['warn',`Plafond d’exonération ${y} des titres-restaurant non renseigné dans l’outil (tableau TR_PLAFOND).`]);
+    else if(q.unitEmp>pl+1e-9)out.push(['warn',`Part studio de ${E(q.unitEmp)} par titre : au-dessus du plafond d’exonération ${y} (${E(pl)}). L’excédent est soumis à cotisations.`]);}
   if(!M.emis){
     const A=M.A;
     if(A.tps.saisi&&A.tps.jours!==A.cal)out.push(['warn',`Les sources divergent : ${C.num(A.tps.jours)} j au suivi de temps, ${C.num(A.cal)} j au calendrier. Vérifie avant d’émettre.`]);
@@ -596,6 +614,7 @@ function chargerDraft(){
   const b=bull(pid,mois);
   draft=b?JSON.parse(JSON.stringify(b)):nouveauDraft(pid,mois);
   draft.lignes=draft.lignes||[];draft.navigo=draft.navigo||{actif:false,montant:0};draft.tr=draft.tr||{nombre:0,valeur:0};
+  if(draft.statut!=='emis'&&draft.tr.partSal==null)draft.tr.partSal=+params(pid).trPartSal;
 }
 function remplirFiche(){
   const P=params(pid),s=periodeStage(person(pid)||{})||{};
@@ -634,7 +653,8 @@ function render(){
   $('#addLine').disabled=emis;
   $('#trMois').textContent=`(${C.moisLabel(C.addMonth(mois))})`;
   $('#trN').value=draft.tr.nombre??0;$('#trN').disabled=emis||!(+P.trValeur>0);
-  $('#trHint').textContent=+P.trValeur>0?`${E(draft.tr.valeur||P.trValeur)} l’unité · proposition : ${A.trN} (jours ouvrés prévus − absences déjà posées)`:'Titres-restaurant désactivés dans la fiche.';
+  const q=C.trParts(draft.tr);
+  $('#trHint').textContent=+P.trValeur>0?`${E(draft.tr.valeur||P.trValeur)} l’unité · proposition : ${A.trN} (jours ouvrés prévus − absences déjà posées)`+(q.actif?` · retenue ${C.num(q.taux)} % : ${E(M.trRetenue)}`:' · aucune retenue (bulletin antérieur à la règle)'):'Titres-restaurant désactivés dans la fiche.';
   $('#payD').value=draft.datePaiement||'';$('#payD').disabled=emis;
   const ch=controles(M,emis&&draft.snapshot?draft.snapshot:P,draft);
   $('#checks').innerHTML=ch.map(([k,m])=>`<li class="${k}">${esc(m)}</li>`).join('');
@@ -651,9 +671,10 @@ function sheet(M){
   const rows=[[t.stipend,`${C.num(M.jours)} ${t.d} × ${C.num(M.heuresJour)} ${t.h} = ${C.num(M.heures)} ${t.h}`,E(M.taux),E(M.gratifBase)],
     ...M.lignes.filter(l=>l.type==='gratif').map(l=>[l.libelle||t.regul,'','',E(l.montant)]),
     ...(M.navigo?[[t.navigo,'','',E(M.navigo)]]:[]),
-    ...M.lignes.filter(l=>l.type!=='gratif').map(l=>[l.libelle||'—','','',E(l.montant)])];
+    ...M.lignes.filter(l=>l.type!=='gratif').map(l=>[l.libelle||'—','','',E(l.montant)]),
+    ...(M.trRetenue?[[t.trRet(C.num(C.trParts(M.tr).taux)),`${M.tr.nombre} × ${C.eur(M.tr.valeur)}`,`${C.num(C.trParts(M.tr).taux)} %`,E(-M.trRetenue)]]:[])];
   $('#sheet').innerHTML=`${M.emis?'':`<div class="wm">${t.draft}</div>`}
-  <div class="sh-top"><div class="sh-mark">MATIÈRE NOIRE</div>
+  <div class="sh-top"><div class="sh-mark">MATIERE NOIRE</div>
     <div class="sh-title"><b>${esc(t.title)}</b><span>${esc(t.period)}${t.sep}${esc(C.moisLabel(M.mois,L))}</span>${M.version>1?`<br><span>${esc(t.version(M.version))}</span>`:''}</div></div>
   <div class="sh-cols">
     <div><h4>${esc(t.host)}</h4><p><b>${esc(S.raison)}</b><br>${esc(S.adresse)}<br>${esc(S.cpVille)}<br>${t.siret} ${S.siret} · ${t.naf} ${S.naf}<br>${t.urssaf} ${S.urssaf}</p></div>
@@ -667,7 +688,7 @@ function sheet(M){
     <div><h4>${esc(t.presence)}</h4><div class="kv"><span>${t.days}</span><span>${C.num(M.jours)} ${t.d}</span></div><div class="kv"><span>${t.hours}</span><span>${C.num(M.heures)} ${t.h}</span></div><div class="kv"><span>${t.absences}</span><span>${esc(absTxt)}</span></div></div>
     <div><h4>${esc(t.cumul)}</h4><div class="kv"><span>${t.cHours}</span><span>${C.num(M.heuresCumulApres)} ${t.h}</span></div><div class="kv"><span>${t.cStip}</span><span>${E(M.cumulApres)}</span></div></div>
   </div>
-  <div class="sh-sec" style="grid-template-columns:1fr"><div><h4>${esc(t.tr)}</h4>${esc(M.tr&&M.tr.nombre>0?t.trLine(M.tr.nombre,C.eur(M.tr.valeur),C.moisLabel(C.addMonth(M.mois),L)):t.trNone)}</div></div>
+  <div class="sh-sec" style="grid-template-columns:1fr"><div><h4>${esc(C.trParts(M.tr).actif?t.trR:t.tr)}</h4>${esc(M.tr&&M.tr.nombre>0?t.trLine(M.tr.nombre,C.eur(M.tr.valeur),C.moisLabel(C.addMonth(M.mois),L))+(C.trParts(M.tr).actif?t.trSplit(C.eur(C.trParts(M.tr).unitEmp),C.eur(C.trParts(M.tr).unitSal)):''):t.trNone)}</div></div>
   <div class="sh-legal">${[t.legal1,M.depasseSeuil?t.legalOver:null,M.navigo?t.legal2:null,t.legal3].filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')}
     <p>${esc(M.emis?t.issued(C.dateFr(M.emisLe),M.emisPar):t.notIssued)}</p></div>`;
 }
@@ -717,7 +738,7 @@ $('#saveFiche').onclick=async()=>{
   if(v.conventionDebut&&v.conventionFin&&v.conventionDebut>v.conventionFin){toast('La fin de convention précède le début.');return;}
   v.majLe=Date.now();v.majPar=user.email.split('@')[0];
   try{await set(ref(db,`${ROOT}/params/${pid}`),v);ficheDirty=false;
-    if(draft&&draft.statut!=='emis'){draft.heuresJour=+v.heuresJour;draft.taux=+v.taux;draft.tr.valeur=+v.trValeur;
+    if(draft&&draft.statut!=='emis'){draft.heuresJour=+v.heuresJour;draft.taux=+v.taux;draft.tr.valeur=+v.trValeur;draft.tr.partSal=+v.trPartSal;
       if(!dirty&&draft.statut==='nouveau')draft=null;}
     toast('Fiche enregistrée');refresh();}
   catch(e){toast('Enregistrement refusé : '+e.message);}
@@ -728,7 +749,7 @@ function aEnregistrer(M,statut){
     jours:M.jours,heuresJour:M.heuresJour,heures:M.heures,taux:M.taux,gratifBase:M.gratifBase,
     lignes:M.lignes.map(l=>({libelle:l.libelle||'',montant:C.r2(l.montant),type:l.type==='gratif'?'gratif':'frais'})),
     navigo:{actif:!!d.navigo.actif,montant:C.r2(d.navigo.montant)},gratification:M.gratification,net:M.net,
-    absences:M.absences,tr:{nombre:+d.tr.nombre||0,valeur:+d.tr.valeur||0},datePaiement:d.datePaiement||'',
+    absences:M.absences,tr:{nombre:+d.tr.nombre||0,valeur:+d.tr.valeur||0,partSal:d.tr.partSal!=null?+d.tr.partSal:null},datePaiement:d.datePaiement||'',
     cumulAvant:M.cumulAvant,cumulApres:M.cumulApres,heuresCumulAvant:M.heuresCumulAvant,heuresCumulApres:M.heuresCumulApres,
     majLe:Date.now(),majPar:user.email.split('@')[0],historique:d.historique||null};
 }
